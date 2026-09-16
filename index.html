@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>zi — 덜 울리고, 안 놓치는 알림 비서</title>
+<meta name="description" content="zi(Zenith Intelligence)는 쏟아지는 알림을 정리하고, 중요한 건 먼저 물어봐 주는 알림 비서입니다. 덜 울리고, 안 놓칩니다." />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, "Segoe UI", Roboto, "Apple SD Gothic Neo", sans-serif;
+         color: #111; background: #fff; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 0 24px; }
+  .langbar { display: flex; justify-content: flex-end; padding: 18px 0 0; }
+  .langbar button { font: inherit; font-size: 13px; color: #888; background: none; border: 1px solid #e5e5e5;
+         border-radius: 999px; padding: 5px 12px; cursor: pointer; }
+  .langbar button:hover { color: #111; border-color: #ccc; }
+  header { padding: 56px 0 0; text-align: center; }
+  .logo { width: 96px; height: 96px; border-radius: 22px; background: #fff;
+          border: 1px solid #ececec; display: inline-flex; align-items: center; justify-content: center; }
+  .logo svg { width: 56px; height: 56px; }
+  h1 { font-size: 30px; letter-spacing: -0.5px; margin: 26px 0 4px; }
+  .backronym { font-size: 13px; color: #7b8794; letter-spacing: 1.5px; text-transform: uppercase; }
+  .tag { font-size: 18px; color: #333; margin-top: 14px; }
+  .lead { margin: 44px 0; font-size: 17px; color: #333; text-align: center; }
+  .lead strong { color: #111; }
+  .points { display: grid; gap: 16px; margin: 40px 0; }
+  .point { border: 1px solid #eee; border-radius: 14px; padding: 18px 20px; }
+  .point h3 { font-size: 15px; margin-bottom: 4px; }
+  .point p { font-size: 14px; color: #666; }
+  footer { border-top: 1px solid #eee; margin-top: 60px; padding: 28px 0 60px; text-align: center;
+           font-size: 13px; color: #999; }
+  footer a { color: #555; text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+  .dot { margin: 0 8px; color: #ccc; }
+  [data-lang="en"] .ko, [data-lang="ko"] .en { display: none; }
+</style>
+</head>
+<body data-lang="ko">
+<div class="wrap">
+  <div class="langbar">
+    <button id="langBtn" type="button"><span class="ko">EN</span><span class="en">한국어</span></button>
+  </div>
+
+  <header>
+    <div class="logo" aria-label="zi logo">
+      <svg viewBox="0 0 108 108" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="zi" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#4f46e5"/>
+            <stop offset="0.55" stop-color="#2563eb"/>
+            <stop offset="1" stop-color="#06b6d4"/>
+          </linearGradient>
+        </defs>
+        <path fill="url(#zi)" d="M26,38 H58 V48 H26 Z"/>
+        <path fill="url(#zi)" d="M47,48 L58,48 L37,62 L26,62 Z"/>
+        <path fill="url(#zi)" d="M26,62 H58 V72 H26 Z"/>
+        <path fill="url(#zi)" d="M66,38 H80 V72 H66 Z"/>
+      </svg>
+    </div>
+    <h1>zi</h1>
+    <p class="backronym">Zenith Intelligence</p>
+    <p class="tag ko">덜 울리고, 안 놓치는 알림 비서</p>
+    <p class="tag en">The assistant that interrupts you less — and misses nothing.</p>
+  </header>
+
+  <p class="lead ko">쏟아지는 알림을 <strong>zi가 정리</strong>하고,<br />중요한 건 <strong>먼저 물어봅니다</strong>. 당신은 결론만 확인하면 됩니다.</p>
+  <p class="lead en">zi <strong>sorts</strong> the flood of notifications and <strong>asks you first</strong> about what matters. You just confirm the conclusion.</p>
+
+  <div class="points">
+    <div class="point">
+      <h3 class="ko">먼저 물어보는 비서</h3>
+      <h3 class="en">Asks before it acts</h3>
+      <p class="ko">깨우지 않아도 zi가 알림을 읽고 정제해, 중요한 건 "이거 지금 볼까요?" 하고 먼저 물어봅니다.</p>
+      <p class="en">Without being opened, zi reads and distills your notifications — and asks "Want to see this now?" for the ones that matter.</p>
+    </div>
+    <div class="point">
+      <h3 class="ko">내용은 폰에만</h3>
+      <h3 class="en">Your content stays on your phone</h3>
+      <p class="ko">알림 원문·발신자는 기기 밖으로 나가지 않습니다. 서비스 개선용 익명 라벨만 전송하고, 설정에서 끌 수 있어요. 가입·로그인 없음.</p>
+      <p class="en">Notification text and senders never leave your device. Only anonymous labels are sent to improve zi, and you can turn that off. No sign-up, no login.</p>
+    </div>
+    <div class="point">
+      <h3 class="ko">덜 울리되, 안 놓침</h3>
+      <h3 class="en">Less noise, nothing missed</h3>
+      <p class="ko">소음은 조용히 접고, 놓치면 안 되는 것만 남깁니다. 결정엔 A부터 Z까지 — zi는 마지막 Z(결론)를 제안하고 확인받습니다.</p>
+      <p class="en">The noise is quietly folded away; only what you can't afford to miss remains. From A to Z, zi proposes the final Z — the conclusion — and asks you to confirm.</p>
+    </div>
+  </div>
+
+  <footer>
+    © 2026 zi
+    <span class="dot">·</span>
+    <a href="/privacy"><span class="ko">개인정보처리방침</span><span class="en">Privacy</span></a>
+    <span class="dot">·</span>
+    <a href="mailto:dlduddn6060@gmail.com"><span class="ko">문의</span><span class="en">Contact</span></a>
+  </footer>
+</div>
+
+<script>
+  (function () {
+    var body = document.body, btn = document.getElementById('langBtn'), html = document.documentElement;
+    btn.addEventListener('click', function () {
+      var next = body.getAttribute('data-lang') === 'ko' ? 'en' : 'ko';
+      body.setAttribute('data-lang', next);
+      html.setAttribute('lang', next);
+    });
+  })();
+</script>
+</body>
+</html>

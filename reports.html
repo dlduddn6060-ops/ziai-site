@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>zi 수집함 · 이벤트</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, "Segoe UI", Roboto, "Apple SD Gothic Neo", sans-serif;
+         max-width: 1080px; margin: 0 auto; padding: 24px 18px 80px; color: #1a1a1a; }
+  h1 { font-size: 22px; margin: 0 0 2px; }
+  .sub { color: #888; font-size: 13px; margin-bottom: 18px; }
+  .bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 18px; }
+  input[type=password] { font: inherit; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; }
+  button { font: inherit; padding: 8px 14px; border: 1px solid #ddd; border-radius: 8px; background: #fff; cursor: pointer; }
+  button.primary { background: #111; color: #fff; border-color: #111; }
+  button:hover { border-color: #999; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin: 14px 0; }
+  .chip { padding: 5px 11px; border-radius: 999px; border: 1px solid #e0e0e0; font-size: 13px; cursor: pointer; color: #555; }
+  .chip.on { background: #111; color: #fff; border-color: #111; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 8px 0 20px; }
+  .card { border: 1px solid #eee; border-radius: 12px; padding: 12px 14px; }
+  .card .n { font-size: 22px; font-weight: 600; }
+  .card .l { font-size: 12px; color: #888; margin-top: 2px; }
+  .grp { border: 1px solid #f0f0f0; border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; }
+  .grp h3 { font-size: 13px; color: #666; margin: 0 0 8px; }
+  .row { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; border-bottom: 1px solid #f7f7f7; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+  th { color: #999; font-weight: 500; font-size: 12px; }
+  .tag { display: inline-block; padding: 1px 7px; border-radius: 6px; font-size: 12px; background: #f2f2f2; }
+  .a-report { background: #ffe8e8; color: #b00; }
+  .a-star { background: #fff4d6; color: #9a6b00; }
+  .a-open { background: #e6f0ff; color: #1155cc; }
+  .a-ignore { background: #eee; color: #888; }
+  .muted { color: #aaa; }
+  .tblwrap { overflow-x: auto; }
+  .mini { font-size: 12px; padding: 4px 9px; }
+  .err { color: #b00; font-size: 13px; }
+</style>
+</head>
+<body>
+  <h1>zi 수집함</h1>
+  <p class="sub">사용자 선택(별·열기·신고·무반응) 이벤트 — 라벨만. 원문 없음.</p>
+
+  <div class="bar">
+    <input id="pw" type="password" placeholder="관리자 비밀번호" />
+    <button class="primary" id="load">불러오기</button>
+    <button id="csv">CSV 내보내기</button>
+    <label style="font-size:13px;color:#666;margin-left:6px;">
+      <input type="checkbox" id="hideFixed" /> 처리됨 숨기기
+    </label>
+    <span id="msg" class="err"></span>
+  </div>
+
+  <div id="summary"></div>
+  <div class="chips" id="chips"></div>
+  <div class="tblwrap"><table id="tbl"><thead></thead><tbody></tbody></table></div>
+
+<script>
+(function () {
+  var ACTIONS = ['report','star','open','ignore'];
+  var LABELS = { report:'신고🪄', star:'별⭐', open:'열기', ignore:'무반응' };
+  var all = [], filter = 'all', pw = '';
+
+  function post(body) {
+    return fetch('/api/reports', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) })
+      .then(function (r) { return r.json().then(function (j) { return { ok:r.ok, j:j }; }); });
+  }
+  function msg(t, err) { var m=document.getElementById('msg'); m.textContent=t||''; m.className = err?'err':''; m.style.color = err?'#b00':'#2a2'; }
+
+  function shown() {
+    var hide = document.getElementById('hideFixed').checked;
+    return all.filter(function (x) {
+      if (filter !== 'all' && x.action !== filter) return false;
+      if (hide && x.status === 'fixed') return false;
+      return true;
+    });
+  }
+
+  function fmtTs(ms) { if(!ms) return ''; var d=new Date(ms); return d.getMonth()+1+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+
+  function tally(list, key) {
+    var m = {}; list.forEach(function (x){ var k=(x[key]||'(없음)'); m[k]=(m[k]||0)+1; });
+    return Object.keys(m).map(function(k){return [k,m[k]];}).sort(function(a,b){return b[1]-a[1];});
+  }
+
+  function render() {
+    var list = shown();
+    // 요약 카드 (action별)
+    var s = document.getElementById('summary');
+    var byA = {}; all.forEach(function(x){ byA[x.action]=(byA[x.action]||0)+1; });
+    var cards = '<div class="cards">' + ACTIONS.map(function(a){
+      return '<div class="card"><div class="n">'+(byA[a]||0)+'</div><div class="l">'+LABELS[a]+'</div></div>';
+    }).join('') + '<div class="card"><div class="n">'+all.length+'</div><div class="l">전체</div></div></div>';
+    // 판정별 / 앱별
+    var byV = tally(list,'ziVerdict'), byApp = tally(list,'app');
+    function grp(title, arr){ return '<div class="grp"><h3>'+title+'</h3>'+arr.slice(0,12).map(function(r){return '<div class="row"><span>'+r[0]+'</span><span>'+r[1]+'</span></div>';}).join('')+'</div>'; }
+    s.innerHTML = cards + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">'+grp('zi판정별 (필터 반영)',byV)+grp('앱별 (필터 반영)',byApp)+'</div>';
+
+    // 칩
+    var chips = document.getElementById('chips');
+    var opts = [['all','전체']].concat(ACTIONS.map(function(a){return [a,LABELS[a]];}));
+    chips.innerHTML = opts.map(function(o){ return '<span class="chip'+(filter===o[0]?' on':'')+'" data-f="'+o[0]+'">'+o[1]+'</span>'; }).join('');
+    Array.prototype.forEach.call(chips.querySelectorAll('.chip'), function(c){ c.onclick=function(){ filter=c.getAttribute('data-f'); render(); }; });
+
+    // 표
+    var thead = document.querySelector('#tbl thead');
+    thead.innerHTML = '<tr><th>시각</th><th>반응</th><th>zi판정</th><th>앱</th><th>신호</th><th>상태</th><th></th></tr>';
+    var tb = document.querySelector('#tbl tbody');
+    tb.innerHTML = list.map(function(x){
+      return '<tr>'
+        + '<td class="muted">'+fmtTs(x.createdAt)+'</td>'
+        + '<td><span class="tag a-'+x.action+'">'+(LABELS[x.action]||x.action)+'</span></td>'
+        + '<td>'+(x.ziVerdict||'')+'</td>'
+        + '<td>'+(x.app||'')+'</td>'
+        + '<td class="muted">'+(x.signals||'')+'</td>'
+        + '<td>'+(x.status==='fixed'?'<span class="muted">처리됨</span>':'new')+'</td>'
+        + '<td style="white-space:nowrap;">'
+          + '<button class="mini" data-fix="'+x.id+'">처리</button> '
+          + '<button class="mini" data-del="'+x.id+'">삭제</button>'
+        + '</td></tr>';
+    }).join('') || '<tr><td colspan="7" class="muted">데이터 없음</td></tr>';
+
+    Array.prototype.forEach.call(tb.querySelectorAll('[data-fix]'), function(b){ b.onclick=function(){ act('fix', b.getAttribute('data-fix')); }; });
+    Array.prototype.forEach.call(tb.querySelectorAll('[data-del]'), function(b){ b.onclick=function(){ act('delete', b.getAttribute('data-del')); }; });
+  }
+
+  function load() {
+    pw = document.getElementById('pw').value;
+    if (!pw) { msg('비밀번호를 넣어줘', true); return; }
+    msg('불러오는 중...');
+    post({ password: pw, action: 'list' }).then(function(r){
+      if (!r.ok) { msg(r.j.error || '실패', true); return; }
+      all = r.j.items || []; msg(all.length + '건 불러옴');
+      render();
+    }).catch(function(e){ msg(e.message, true); });
+  }
+
+  function act(a, id) {
+    post({ password: pw, action: a, id: id }).then(function(r){
+      if (!r.ok) { msg(r.j.error || '실패', true); return; }
+      if (a === 'delete') all = all.filter(function(x){return x.id!==id;});
+      else { var it = all.find(function(x){return x.id===id;}); if(it) it.status='fixed'; }
+      render();
+    });
+  }
+
+  function csv() {
+    var list = shown();
+    var head = ['createdAt','action','ziVerdict','app','signals','installId','appVersion','status'];
+    var rows = [head.join(',')].concat(list.map(function(x){
+      return head.map(function(k){ var v=(k==='createdAt'?fmtTs(x[k]):(x[k]==null?'':x[k])); return '"'+String(v).replace(/"/g,'""')+'"'; }).join(',');
+    }));
+    var blob = new Blob(['﻿'+rows.join('\n')], { type:'text/csv;charset=utf-8;' });
+    var a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='zi_events.csv'; a.click();
+  }
+
+  document.getElementById('load').onclick = load;
+  document.getElementById('csv').onclick = csv;
+  document.getElementById('hideFixed').onchange = render;
+  document.getElementById('pw').addEventListener('keydown', function(e){ if(e.key==='Enter') load(); });
+})();
+</script>
+</body>
+</html>

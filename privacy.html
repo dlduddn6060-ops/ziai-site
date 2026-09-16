@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>zi 개인정보처리방침 · Privacy Policy</title>
+<style>
+  body { font-family: -apple-system, "Segoe UI", Roboto, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 18px; color: #1a1a1a; line-height: 1.65; }
+  h1 { font-size: 24px; } h2 { font-size: 18px; margin-top: 28px; } h3 { font-size: 15px; margin-top: 18px; }
+  .meta { color: #666; font-size: 14px; }
+  hr { border: 0; border-top: 1px solid #e0e0e0; margin: 40px 0; }
+  code { background:#f3f3f3; padding:1px 5px; border-radius:4px; }
+  ul { padding-left: 20px; }
+</style>
+</head>
+<body>
+
+<!-- ⚠️ 게시 전 확인: ① 시행일 ② 연락 이메일 ③ 회사/개발자 표기 ④ 실제 수집 항목이 앱 구현과 일치하는지 -->
+
+<h1>zi 개인정보처리방침</h1>
+<p class="meta">시행일: 2026-09-14 · 문의: dlduddn6060@gmail.com</p>
+
+<p>zi("앱")는 사용자의 알림을 정리해 보여주는 안드로이드 앱입니다. <strong>알림의 원문(제목·본문·발신자 등)은 기기 안에만</strong> 저장되며, 서비스 개선을 위한 <strong>익명 사용 라벨만</strong> zi 서버로 전송됩니다(설정에서 끌 수 있음). zi는 회원가입·로그인이 없습니다. 본 방침은 zi가 어떤 정보를 어떻게 다루는지 설명합니다.</p>
+
+<h2>1. 기기 안에서만 처리하는 정보</h2>
+<h3>알림 내용(원문)</h3>
+<p>알림 접근 권한(NotificationListenerService)을 통해 알림의 제목·내용·앱 이름·시각 등을 읽어 분류·요약합니다. 이 <strong>원문 데이터는 기기 내 로컬 저장소에만</strong> 저장되며, <strong>외부로 전송되지 않고 개발자도 접근할 수 없습니다.</strong></p>
+<h3>사용 정보(선택)</h3>
+<p>사용자가 켠 경우에 한해 어떤 앱을 열었는지(사용 정보 접근)를 읽어 "읽은 알림 자동 정리"에 사용합니다. 기기 내에서만 쓰이며 전송되지 않습니다.</p>
+
+<h2>2. zi 서버로 전송되는 정보 — 익명 사용 라벨 (기본 켜짐, 끌 수 있음)</h2>
+<p>분류·요약 규칙을 개선하기 위해, 사용자의 반응을 <strong>익명 라벨 형태로만</strong> 전송합니다. 개인을 식별하지 않습니다.</p>
+<h3>전송하는 것</h3>
+<ul>
+<li>알림이 온 <strong>앱/출처</strong>(패키지명)</li>
+<li>zi가 매긴 <strong>분류 판정</strong>(예: 중요·연락·정보·소음·광고)과 판정 근거 신호(그룹 대화 여부·답장 가능 여부 등)</li>
+<li>사용자 <strong>반응</strong>(중요표시·열기·신고·무반응)</li>
+<li>발생 <strong>시각</strong>, 앱 버전, <strong>익명 설치 식별자</strong>(무작위 값, 앱 재설치 시 초기화 — 개인 신원과 무관)</li>
+</ul>
+<h3>전송하지 않는 것</h3>
+<p>알림의 <strong>제목·본문·발신자·연락처·인증번호·금액·메시지 내용 등 원문/개인정보는 전송하지 않습니다.</strong></p>
+<h3>저장·통제</h3>
+<p>전송된 익명 라벨은 zi 운영 인프라(Firebase / Firestore, Google)에 저장되며 서비스 개선에만 사용됩니다. 이 기능은 <strong>설정 "지브라 똑똑하게 돕기"에서 언제든 끌 수 있으며</strong>, 끄면 전송이 중단됩니다.</p>
+
+<h2>3. 외부 AI 연동(BYOK) — 선택·옵트인</h2>
+<p>사용자가 <strong>직접 본인 API 키를 입력</strong>해 외부 AI를 연결한 경우에 한해, 요청한 알림 내용이 <strong>기기에서 해당 AI 제공자로 직접 전송</strong>됩니다. <strong>기본 꺼짐</strong>이며 명시적 동의 후에만 작동합니다. 전송된 데이터는 해당 제공자의 방침을 따르며, zi는 이 데이터를 자체 서버에 저장·중계하지 않습니다.</p>
+
+<h2>4. 푸시 알림(공지)</h2>
+<p>zi는 공지 수신을 위해 Firebase Cloud Messaging(Google)을 사용합니다. 기기별 메시징 토큰이 Google에 의해 처리될 수 있으며, zi는 이를 개인 신원과 연결하지 않습니다. 공지는 "토픽" 방송 방식이라 개별 사용자를 식별해 보내지 않습니다.</p>
+
+<h2>5. 권한 사용 목적</h2>
+<ul>
+<li><strong>알림 접근</strong> — 알림을 읽어 정리·요약(핵심 기능).</li>
+<li><strong>알림 표시</strong> — 정리된 요약·공지 표시.</li>
+<li><strong>사용 정보 접근(선택)</strong> — 읽은 알림 자동 정리.</li>
+<li><strong>알람/부팅 완료</strong> — 리마인더 예약 및 재부팅 후 복원.</li>
+<li><strong>배터리 최적화 제외(선택)</strong> — 절전 중에도 알림 정리 유지.</li>
+<li><strong>인터넷</strong> — 익명 사용 라벨 전송, (옵트인 시) 외부 AI 연동, 푸시 수신.</li>
+</ul>
+
+<h2>6. 제3자 제공·공유</h2>
+<p>zi는 사용자 데이터를 <strong>판매하지 않으며</strong> 광고·마케팅 목적으로 제3자에게 공유하지 않습니다. 익명 라벨(2항)은 저장을 위해 클라우드 인프라 제공자(Google Firebase)에서 처리됩니다. 외부 AI 연동(3항)을 켠 경우 데이터는 사용자가 선택한 AI 제공자에게 전송됩니다.</p>
+
+<h2>7. 보관·삭제</h2>
+<p>기기 내 알림 데이터는 사용자가 설정에서 보존 기간을 정하거나 언제든 삭제할 수 있고, 앱을 삭제하면 함께 제거됩니다. 익명 사용 라벨은 개인을 식별하지 않으므로 개별 건 삭제 요청 대상이 되기 어렵지만, <strong>설정에서 수집을 끄면</strong> 이후 전송이 중단됩니다. 백업 파일은 사용자가 정한 비밀번호로 암호화됩니다.</p>
+
+<h2>8. 아동</h2>
+<p>zi는 만 14세 미만 아동을 대상으로 하지 않으며, 아동의 개인정보를 의도적으로 수집하지 않습니다.</p>
+
+<h2>9. 변경</h2>
+<p>본 방침이 변경되면 본 페이지에 갱신일과 함께 게시합니다.</p>
+
+<h2>10. 문의</h2>
+<p>개인정보 관련 문의: dlduddn6060@gmail.com</p>
+
+<hr />
+
+<h1>zi Privacy Policy</h1>
+<p class="meta">Effective: 2026-09-14 · Contact: dlduddn6060@gmail.com</p>
+
+<p>zi ("the app") is an Android app that tidies and summarizes your notifications. The <strong>content of your notifications (title, body, sender, etc.) stays on your device</strong>; only <strong>anonymous usage labels</strong> are sent to zi's server to improve the service (you can turn this off in settings). zi has no sign-up or login. This policy explains what zi handles and how.</p>
+
+<h2>1. Processed only on your device</h2>
+<h3>Notification content</h3>
+<p>Via notification access (NotificationListenerService), zi reads the title, text, app name, and time of notifications to classify and summarize them. This <strong>content is stored only in local on-device storage</strong>, is <strong>not sent anywhere, and is not accessible to the developer.</strong></p>
+<h3>Usage data (optional)</h3>
+<p>Only if you enable it, zi reads which apps you open (usage access) to power "auto-clear read notifications." Used on-device only; never transmitted.</p>
+
+<h2>2. Sent to zi's server — anonymous usage labels (on by default, can be turned off)</h2>
+<p>To improve classification and summarization, zi sends your reactions as <strong>anonymous labels only</strong>. It does not identify you.</p>
+<h3>What is sent</h3>
+<ul>
+<li>The <strong>app/source</strong> of the notification (package name)</li>
+<li>zi's <strong>classification verdict</strong> (e.g., important, contact, info, noise, ad) and the signals behind it (whether it's a group conversation, whether reply is possible, etc.)</li>
+<li>Your <strong>reaction</strong> (star, open, report, no-reaction)</li>
+<li>The <strong>time</strong>, app version, and an <strong>anonymous install identifier</strong> (a random value, reset when the app is reinstalled — not tied to your identity)</li>
+</ul>
+<h3>What is NOT sent</h3>
+<p>The notification's <strong>title, body, sender, contacts, verification codes, amounts, message content, or any other original/personal information is not sent.</strong></p>
+<h3>Storage and control</h3>
+<p>The anonymous labels are stored on zi's operating infrastructure (Firebase / Firestore, Google) and used only to improve the service. You can <strong>turn this off anytime in settings ("Help zi get smarter")</strong>; turning it off stops transmission.</p>
+
+<h2>3. External AI (BYOK) — optional, opt-in</h2>
+<p>Only if you <strong>enter your own API key</strong> to connect an external AI, the notification content you request is sent <strong>directly from your device to that AI provider</strong>. This is <strong>off by default</strong> and works only after your explicit consent. The transmitted data is governed by that provider's policy; zi does not store or relay it on any server of its own.</p>
+
+<h2>4. Push notifications (announcements)</h2>
+<p>zi uses Firebase Cloud Messaging (Google) to receive announcements. A per-device messaging token may be processed by Google; zi does not link it to your identity. Announcements use "topic" broadcast and do not target individual users.</p>
+
+<h2>5. Permissions and why</h2>
+<ul>
+<li><strong>Notification access</strong> — read notifications to tidy/summarize (core function).</li>
+<li><strong>Post notifications</strong> — show the tidied summary and announcements.</li>
+<li><strong>Usage access (optional)</strong> — auto-clear read notifications.</li>
+<li><strong>Alarms / boot completed</strong> — schedule reminders and restore after reboot.</li>
+<li><strong>Battery optimization exclusion (optional)</strong> — keep tidying alive during power saving.</li>
+<li><strong>Internet</strong> — send anonymous usage labels, (when opted in) external AI, and push reception.</li>
+</ul>
+
+<h2>6. Sharing with third parties</h2>
+<p>zi does <strong>not sell</strong> your data and does not share it with third parties for advertising or marketing. The anonymous labels (section 2) are processed by our cloud infrastructure provider (Google Firebase) for storage. If you enable external AI (section 3), data is sent to the AI provider you choose.</p>
+
+<h2>7. Retention and deletion</h2>
+<p>On-device notification data can be given a retention period or deleted anytime in settings, and is removed when you uninstall. Anonymous usage labels do not identify you, so per-item deletion requests are generally not applicable; however, <strong>turning off collection in settings</strong> stops further transmission. Backup files are encrypted with a password you choose.</p>
+
+<h2>8. Children</h2>
+<p>zi is not directed to children under 14 and does not knowingly collect children's personal information.</p>
+
+<h2>9. Changes</h2>
+<p>If this policy changes, we will post the update here with a revised date.</p>
+
+<h2>10. Contact</h2>
+<p>Privacy inquiries: dlduddn6060@gmail.com</p>
+
+</body>
+</html>

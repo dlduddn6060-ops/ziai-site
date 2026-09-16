@@ -1,0 +1,9 @@
+{
+  "name": "ziai-site",
+  "private": true,
+  "version": "1.0.0",
+  "description": "ziai 사이트 + 분류 실패 신고 수신(api/report)·신고함(reports.html)",
+  "dependencies": {
+    "firebase-admin": "^12.7.0"
+  }
+}
