@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>zi — 덜 울리고, 안 놓치는 알림 비서</title>
-<meta name="description" content="zi(Zenith Intelligence)는 쏟아지는 알림을 정리하고, 중요한 건 먼저 물어봐 주는 알림 비서입니다. 덜 울리고, 안 놓칩니다." />
+<title>ziai — 먼저 움직이는 AI</title>
+<meta name="description" content="ziai — 먼저 움직이는 AI. 쏟아지는 알림을 알아서 정리합니다." />
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, "Segoe UI", Roboto, "Apple SD Gothic Neo", sans-serif;
@@ -18,16 +18,21 @@
   .logo { width: 96px; height: 96px; border-radius: 22px; background: #fff;
           border: 1px solid #ececec; display: inline-flex; align-items: center; justify-content: center; }
   .logo svg { width: 56px; height: 56px; }
-  h1 { font-size: 30px; letter-spacing: -0.5px; margin: 26px 0 4px; }
-  .backronym { font-size: 13px; color: #7b8794; letter-spacing: 1.5px; text-transform: uppercase; }
-  .tag { font-size: 18px; color: #333; margin-top: 14px; }
-  .lead { margin: 44px 0; font-size: 17px; color: #333; text-align: center; }
-  .lead strong { color: #111; }
-  .points { display: grid; gap: 16px; margin: 40px 0; }
-  .point { border: 1px solid #eee; border-radius: 14px; padding: 18px 20px; }
-  .point h3 { font-size: 15px; margin-bottom: 4px; }
-  .point p { font-size: 14px; color: #666; }
-  footer { border-top: 1px solid #eee; margin-top: 60px; padding: 28px 0 60px; text-align: center;
+  .name { font-size: 27px; font-weight: 700; letter-spacing: -0.2px; margin: 28px 0 0;
+          background: linear-gradient(120deg, #4f46e5, #2563eb, #06b6d4);
+          -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .tag { font-size: 17px; color: #555; margin-top: 12px; }
+  .points { display: grid; gap: 14px; margin: 52px 0 0; }
+  .point { border: 1px solid #eee; border-radius: 14px; overflow: hidden; }
+  .point summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 12px;
+          padding: 18px 20px; }
+  .point summary::-webkit-details-marker { display: none; }
+  .point .icon { width: 22px; height: 22px; color: #2563eb; flex: none; }
+  .point .ptitle { font-size: 15px; font-weight: 600; flex: 1; }
+  .point .chev { width: 16px; height: 16px; color: #c4c4c4; flex: none; transition: transform .2s; }
+  .point[open] .chev { transform: rotate(180deg); }
+  .point .desc { padding: 0 20px 18px 54px; font-size: 14px; color: #666; }
+  footer { border-top: 1px solid #eee; margin-top: 56px; padding: 28px 0 60px; text-align: center;
            font-size: 13px; color: #999; }
   footer a { color: #555; text-decoration: none; }
   footer a:hover { text-decoration: underline; }
@@ -42,7 +47,7 @@
   </div>
 
   <header>
-    <div class="logo" aria-label="zi logo">
+    <div class="logo" aria-label="ziai logo">
       <svg viewBox="0 0 108 108" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="zi" x1="0" y1="0" x2="1" y2="1">
@@ -57,42 +62,49 @@
         <path fill="url(#zi)" d="M66,38 H80 V72 H66 Z"/>
       </svg>
     </div>
-    <h1>zi</h1>
-    <p class="backronym">Zenith Intelligence</p>
-    <p class="tag ko">덜 울리고, 안 놓치는 알림 비서</p>
-    <p class="tag en">The assistant that interrupts you less — and misses nothing.</p>
+    <p class="name">Zenith Intelligence</p>
+    <p class="tag ko">ziai — 먼저 움직이는 AI</p>
+    <p class="tag en">ziai — the AI that moves first</p>
   </header>
 
-  <p class="lead ko">쏟아지는 알림을 <strong>zi가 정리</strong>하고,<br />중요한 건 <strong>먼저 물어봅니다</strong>. 당신은 결론만 확인하면 됩니다.</p>
-  <p class="lead en">zi <strong>sorts</strong> the flood of notifications and <strong>asks you first</strong> about what matters. You just confirm the conclusion.</p>
-
   <div class="points">
-    <div class="point">
-      <h3 class="ko">먼저 물어보는 비서</h3>
-      <h3 class="en">Asks before it acts</h3>
-      <p class="ko">깨우지 않아도 zi가 알림을 읽고 정제해, 중요한 건 "이거 지금 볼까요?" 하고 먼저 물어봅니다.</p>
-      <p class="en">Without being opened, zi reads and distills your notifications — and asks "Want to see this now?" for the ones that matter.</p>
-    </div>
-    <div class="point">
-      <h3 class="ko">내용은 폰에만</h3>
-      <h3 class="en">Your content stays on your phone</h3>
-      <p class="ko">알림 원문·발신자는 기기 밖으로 나가지 않습니다. 서비스 개선용 익명 라벨만 전송하고, 설정에서 끌 수 있어요. 가입·로그인 없음.</p>
-      <p class="en">Notification text and senders never leave your device. Only anonymous labels are sent to improve zi, and you can turn that off. No sign-up, no login.</p>
-    </div>
-    <div class="point">
-      <h3 class="ko">덜 울리되, 안 놓침</h3>
-      <h3 class="en">Less noise, nothing missed</h3>
-      <p class="ko">소음은 조용히 접고, 놓치면 안 되는 것만 남깁니다. 결정엔 A부터 Z까지 — zi는 마지막 Z(결론)를 제안하고 확인받습니다.</p>
-      <p class="en">The noise is quietly folded away; only what you can't afford to miss remains. From A to Z, zi proposes the final Z — the conclusion — and asks you to confirm.</p>
-    </div>
+    <details class="point">
+      <summary>
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.5 8.5 0 1 1 21 11.5z"/><path d="M12 8v4"/><path d="M12 15.5h.01"/></svg>
+        <span class="ptitle"><span class="ko">먼저 물어봅니다</span><span class="en">Asks first</span></span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </summary>
+      <div class="desc ko">깨우지 않아도 ziai가 알림을 읽고 정제해, 중요한 건 "이거 지금 볼까요?" 하고 먼저 물어봅니다.</div>
+      <div class="desc en">Without being opened, ziai reads and distills your notifications — and asks "Want to see this now?" for the ones that matter.</div>
+    </details>
+
+    <details class="point">
+      <summary>
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+        <span class="ptitle"><span class="ko">내용은 폰에만</span><span class="en">Content stays on your phone</span></span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </summary>
+      <div class="desc ko">알림 원문·발신자는 기기 밖으로 나가지 않습니다. 서비스 개선용 익명 라벨만 전송하고, 설정에서 끌 수 있어요. 가입·로그인 없음.</div>
+      <div class="desc en">Notification text and senders never leave your device. Only anonymous labels are sent to improve ziai, and you can turn that off. No sign-up, no login.</div>
+    </details>
+
+    <details class="point">
+      <summary>
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-6.5 8v5l-3 1.5V13L4 5z"/></svg>
+        <span class="ptitle"><span class="ko">덜 울리되, 안 놓침</span><span class="en">Less noise, nothing missed</span></span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </summary>
+      <div class="desc ko">소음은 조용히 접고, 놓치면 안 되는 것만 남깁니다. 결정엔 A부터 Z까지 — ziai는 마지막 Z(결론)를 제안하고 확인받습니다.</div>
+      <div class="desc en">The noise is quietly folded away; only what you can't afford to miss remains. From A to Z, ziai proposes the final Z — the conclusion — and asks you to confirm.</div>
+    </details>
   </div>
 
   <footer>
-    © 2026 zi
+    © 2026 ziai
     <span class="dot">·</span>
     <a href="/privacy"><span class="ko">개인정보처리방침</span><span class="en">Privacy</span></a>
     <span class="dot">·</span>
-    <a href="mailto:dlduddn6060@gmail.com"><span class="ko">문의</span><span class="en">Contact</span></a>
+    <a href="mailto:dlduddn6060@gmail.com?subject=ziai%20%EB%AC%B8%EC%9D%98"><span class="ko">문의</span><span class="en">Contact</span></a>
   </footer>
 </div>
 
