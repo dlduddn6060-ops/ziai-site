@@ -52,6 +52,7 @@
     <input id="pw" type="password" placeholder="관리자 비밀번호" />
     <button class="primary" id="load">불러오기</button>
     <button id="csv">CSV 내보내기(기간 전체)</button>
+    <button id="backfill" class="mini" hidden>집계 다시 계산</button>
     <label style="font-size:13px;color:#666;margin-left:6px;">
       <input type="checkbox" id="hideFixed" /> 처리됨 숨기기
     </label>
@@ -74,7 +75,13 @@
 
   function post(body) {
     return fetch('/api/reports', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) })
-      .then(function (r) { return r.json().then(function (j) { return { ok:r.ok, j:j }; }); });
+      .then(function (r) {
+        // JSON이 아닌 서버 응답(타임아웃 페이지 등)도 그대로 보이게 — 본문 텍스트를 error로.
+        return r.text().then(function (t) {
+          var j; try { j = JSON.parse(t); } catch (e) { j = { error: (t || '').slice(0, 300) || ('HTTP ' + r.status) }; }
+          return { ok:r.ok, status:r.status, j:j };
+        });
+      });
   }
   function msg(t, err) { var m=document.getElementById('msg'); m.textContent=t||''; m.className = err?'err':''; m.style.color = err?'#b00':'#2a2'; }
   function esc(v) { return String(v==null?'':v).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
@@ -167,6 +174,7 @@
       var bad = rs.filter(function(r){ return !r.ok; })[0];
       if (bad) { msg(bad.j.error || '실패', true); return; }
       st = rs[0].j; all = rs[1].j.items || []; cursor = rs[1].j.nextCursor || null;
+      document.getElementById('backfill').hidden = false; // 로그인(불러오기 성공) 후에만 노출
       msg('집계 ' + (st.days||0) + '일 · 목록 ' + all.length + '건' + (cursor ? '(더 있음)' : ''));
       render();
     }).catch(function(e){ msg(e.message, true); });
@@ -217,7 +225,22 @@
     }).catch(function(e){ msg(e.message, true); });
   }
 
+  // 집계 다시 계산 — events 전체로 stats 덮어쓰기(서버 backfill, 여러 번 해도 중복 없음). 화면 비밀번호 그대로 사용.
+  function backfill() {
+    if (!pw) { msg('먼저 불러오기', true); return; }
+    if (!confirm('전체 이벤트로 날짜별 집계를 다시 계산할까요? (여러 번 해도 중복 없음)')) return;
+    var b = document.getElementById('backfill');
+    b.disabled = true; msg('계산 중…');
+    post({ password: pw, action: 'backfill' }).then(function(r){
+      b.disabled = false;
+      if (!r.ok) { msg((r.j && r.j.error) || ('실패 (HTTP ' + r.status + ')'), true); return; }
+      msg('완료 — 이벤트 ' + (r.j.scanned || 0) + '건, ' + (r.j.days || 0) + '일 집계');
+      setTimeout(load, 800);
+    }).catch(function(e){ b.disabled = false; msg(e.message, true); });
+  }
+
   renderPeriod();
+  document.getElementById('backfill').onclick = backfill;
   document.getElementById('load').onclick = load;
   document.getElementById('more').onclick = more;
   document.getElementById('csv').onclick = csv;
