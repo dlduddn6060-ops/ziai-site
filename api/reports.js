@@ -1,6 +1,7 @@
 // zi 이벤트 조회/관리 — 관리자 전용(ADMIN_PASSWORD). reports.html이 호출.
 //   POST { password, action:'stats', from?, to? }                 → 기간 stats/{yyyy-MM-dd}(KST) 합산
 //   POST { password, action:'list', cursor?, limit=100, from?, to? } → 최신순 페이지(startAfter), nextCursor
+//        + onlyAction:'report' → 그 action만(최대 500, 기간·정렬은 메모리, 페이지 없음, truncated 표시)
 //   POST { password, action:'fix',    id }                        → status='fixed'
 //   POST { password, action:'delete', id }                        → 삭제
 //   POST { password, action:'backfill' }                          → events 전체로 stats 재계산(1회용, 덮어쓰기라 재실행 안전)
@@ -84,6 +85,20 @@ module.exports = async (req, res) => {
         await batch.commit();
       }
       return res.status(200).json({ ok: true, scanned, days: days.length, from: days[0] || null, to: days[days.length - 1] || null });
+    }
+
+    // [수정만] onlyAction — 그 action만. action 등치 + createdAt 범위/정렬은 복합 인덱스가 필요하므로 피하고,
+    // 등치 조회만(단일 필드 자동 인덱스) 최대 REPORT_MAX건 → 기간 필터·최신순 정렬은 서버 메모리에서. 페이지 없이 한 번에.
+    if (d.onlyAction) {
+      const only = String(d.onlyAction);
+      const REPORT_MAX = 500;
+      const snap = await db.collection('events').where('action', '==', only).limit(REPORT_MAX).get();
+      const lo = from ? stats.kstStartMs(from) : -Infinity;
+      const hi = to ? stats.kstStartMs(to) + DAY_MS : Infinity;
+      const items = snap.docs.map(toItem)
+        .filter((x) => (x.createdAt || 0) >= lo && (x.createdAt || 0) < hi)
+        .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      return res.status(200).json({ ok: true, items, nextCursor: null, truncated: snap.size === REPORT_MAX });
     }
 
     // 'list'(기본) — 최신순 페이지.

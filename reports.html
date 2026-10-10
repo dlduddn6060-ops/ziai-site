@@ -71,7 +71,12 @@
   var ACTIONS = ['report','star','open','ignore','suggest_open','suggest_dismiss'];
   var LABELS = { report:'신고🪄', star:'별⭐', open:'열기', ignore:'무반응', ignore_daily:'무반응(일)', suggest_open:'추천 열기', suggest_dismiss:'추천 안 볼래' };
   var PERIODS = [['today','오늘'],['7d','7일'],['30d','30일'],['all','전체']];
-  var all = [], filter = 'all', pw = '', period = '7d', cursor = null, st = null;
+  var all = [], filter = 'all', pw = '', period = '7d', cursor = null, st = null, truncated = false;
+  // [수정만] = report(신고)만. 켜짐 상태는 localStorage(실패해도 정상 동작 — 기본 꺼짐).
+  var ONLY_KEY = 'zi_reports_only_report';
+  var onlyReport = false;
+  try { onlyReport = localStorage.getItem(ONLY_KEY) === '1'; } catch (e) {}
+  function saveOnly() { try { localStorage.setItem(ONLY_KEY, onlyReport ? '1' : '0'); } catch (e) {} }
 
   function post(body) {
     return fetch('/api/reports', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) })
@@ -113,8 +118,10 @@
 
   function renderPeriod() {
     var el = document.getElementById('period');
-    el.innerHTML = PERIODS.map(function(p){ return '<span class="chip'+(period===p[0]?' on':'')+'" data-p="'+p[0]+'">'+p[1]+'</span>'; }).join('');
-    Array.prototype.forEach.call(el.querySelectorAll('.chip'), function(c){ c.onclick=function(){ period=c.getAttribute('data-p'); renderPeriod(); if (pw) load(); }; });
+    el.innerHTML = PERIODS.map(function(p){ return '<span class="chip'+(period===p[0]?' on':'')+'" data-p="'+p[0]+'">'+p[1]+'</span>'; }).join('')
+      + '<span class="chip'+(onlyReport?' on':'')+'" id="onlyReport" style="margin-left:8px;">수정만</span>';
+    Array.prototype.forEach.call(el.querySelectorAll('[data-p]'), function(c){ c.onclick=function(){ period=c.getAttribute('data-p'); renderPeriod(); if (pw) load(); }; });
+    document.getElementById('onlyReport').onclick = function(){ onlyReport = !onlyReport; saveOnly(); filter = 'all'; renderPeriod(); if (pw) load(); else render(); };
   }
 
   function renderSummary() {
@@ -122,11 +129,19 @@
     if (!st) { s.innerHTML = ''; return; }
     var a = st.action || {};
     var n = function(k){ return a[k] || 0; };
+    function grp(title, arr){ return '<div class="grp"><h3>'+title+'</h3>'+(arr.slice(0,12).map(function(r){return '<div class="row"><span>'+esc(r[0])+'</span><span>'+r[1]+'</span></div>';}).join('')||'<div class="muted">없음</div>')+'</div>'; }
+    if (onlyReport) {
+      // 카드 = stats의 report 수치. stats엔 판정·앱별이 action 구분 없이 합쳐져 있어 report만 뽑을 수 없으므로,
+      // 판정별·앱별은 이미 불러온 report 목록(추가 읽기 0)에서 셈.
+      var tally = function(key){ var m = {}; all.forEach(function(x){ var k = x[key] || '(없음)'; m[k] = (m[k]||0) + 1; }); return sorted(m); };
+      s.innerHTML = '<div class="cards"><div class="card"><div class="n">'+n('report')+'</div><div class="l">신고🪄 (기간)</div></div></div>'
+        + '<div class="two">'+grp('zi판정별 (수정만 · 목록 '+all.length+'건)',tally('ziVerdict'))+grp('앱별 (수정만 · 목록 '+all.length+'건)',tally('app'))+'</div>';
+      return;
+    }
     var cards = [
       [n('report'),'신고🪄'], [n('star'),'별⭐'], [n('open'),'열기'],
       [n('ignore') + n('ignore_daily'),'무반응'], [n('suggest_open') + n('suggest_dismiss'),'추천 반응'], [st.total || 0,'전체'],
     ];
-    function grp(title, arr){ return '<div class="grp"><h3>'+title+'</h3>'+(arr.slice(0,12).map(function(r){return '<div class="row"><span>'+esc(r[0])+'</span><span>'+r[1]+'</span></div>';}).join('')||'<div class="muted">없음</div>')+'</div>'; }
     s.innerHTML = '<div class="cards">' + cards.map(function(c){ return '<div class="card"><div class="n">'+c[0]+'</div><div class="l">'+c[1]+'</div></div>'; }).join('') + '</div>'
       + '<div class="two">'+grp('zi판정별 (기간)',sorted(st.verdict))+grp('앱별 (기간)',sorted(st.app))+'</div>';
   }
@@ -135,6 +150,7 @@
     renderSummary();
     var list = shown();
     var chips = document.getElementById('chips');
+    chips.style.display = onlyReport ? 'none' : ''; // 수정만이면 반응 필터 무의미
     var opts = [['all','전체']].concat(ACTIONS.map(function(a){return [a,LABELS[a]];}));
     chips.innerHTML = opts.map(function(o){ return '<span class="chip'+(filter===o[0]?' on':'')+'" data-f="'+o[0]+'">'+o[1]+'</span>'; }).join('');
     Array.prototype.forEach.call(chips.querySelectorAll('.chip'), function(c){ c.onclick=function(){ filter=c.getAttribute('data-f'); render(); }; });
@@ -163,7 +179,9 @@
   }
 
   function page(cur, limit) {
-    return post(withRange({ password: pw, action: 'list', cursor: cur || undefined, limit: limit }));
+    var body = withRange({ password: pw, action: 'list', cursor: cur || undefined, limit: limit });
+    if (onlyReport) body.onlyAction = 'report'; // 서버에서 report만(기간 같이 적용)
+    return post(body);
   }
 
   function load() {
@@ -173,9 +191,9 @@
     Promise.all([post(withRange({ password: pw, action: 'stats' })), page(null, 100)]).then(function(rs){
       var bad = rs.filter(function(r){ return !r.ok; })[0];
       if (bad) { msg(bad.j.error || '실패', true); return; }
-      st = rs[0].j; all = rs[1].j.items || []; cursor = rs[1].j.nextCursor || null;
+      st = rs[0].j; all = rs[1].j.items || []; cursor = rs[1].j.nextCursor || null; truncated = !!rs[1].j.truncated;
       document.getElementById('backfill').hidden = false; // 로그인(불러오기 성공) 후에만 노출
-      msg('집계 ' + (st.days||0) + '일 · 목록 ' + all.length + '건' + (cursor ? '(더 있음)' : ''));
+      msg('집계 ' + (st.days||0) + '일 · 목록 ' + all.length + '건' + (cursor ? '(더 있음)' : '') + (onlyReport ? ' · 수정만' : '') + (truncated ? ' (신고 500건 초과 — 일부만)' : ''));
       render();
     }).catch(function(e){ msg(e.message, true); });
   }
@@ -220,7 +238,7 @@
         }).join(',');
       }));
       var blob = new Blob(['﻿'+rows.join('\n')], { type:'text/csv;charset=utf-8;' });
-      var a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='zi_events_'+period+'.csv'; a.click();
+      var a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='zi_events_'+period+(onlyReport?'_report':'')+'.csv'; a.click();
       msg('CSV ' + list.length + '건');
     }).catch(function(e){ msg(e.message, true); });
   }
