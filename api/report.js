@@ -15,6 +15,7 @@ if (!admin.apps.length) {
   });
 }
 const stats = require('./_stats');
+const { isTransient } = require('./_errors');
 
 // 'ignore'(건별)는 구버전 앱 호환용으로 계속 받음.
 const ALLOWED_ACTIONS = ['star', 'open', 'report', 'ignore', 'ignore_daily', 'suggest_open', 'suggest_dismiss'];
@@ -72,6 +73,8 @@ module.exports = async (req, res) => {
     await batch.commit();
     return res.status(200).json({ ok: true, id: ref.id });
   } catch (e) {
+    // 충돌·일시 오류(ABORTED/RESOURCE_EXHAUSTED/UNAVAILABLE) = 503 → 앱이 같은 날 백오프 재시도. 그 외 500.
+    if (isTransient(e)) return res.status(503).json({ error: 'temporarily unavailable', code: String(e.code) });
     return res.status(500).json({ error: e.message });
   }
 };
