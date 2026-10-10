@@ -13,7 +13,7 @@ if (!admin.apps.length) {
   });
 }
 
-const ALLOWED_ACTIONS = ['star', 'open', 'report', 'ignore'];
+const ALLOWED_ACTIONS = ['star', 'open', 'report', 'ignore', 'suggest_open', 'suggest_dismiss'];
 
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') {
@@ -31,7 +31,7 @@ module.exports = async (req, res) => {
 
   const action = (d.action || '').toString();
   if (!ALLOWED_ACTIONS.includes(action)) {
-    return res.status(400).json({ error: 'action 필요(star/open/report/ignore)' });
+    return res.status(400).json({ error: 'action 필요(star/open/report/ignore/suggest_open/suggest_dismiss)' });
   }
 
   // 라벨 allowlist — 이 필드만 저장. 원문류(title/body/summary/sender/memo)는 와도 버림.

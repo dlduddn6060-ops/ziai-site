@@ -18,7 +18,7 @@
 <!-- ⚠️ 게시 전 확인: ① 시행일 ② 연락 이메일 ③ 회사/개발자 표기 ④ 실제 수집 항목이 앱 구현과 일치하는지 -->
 
 <h1>zi 개인정보처리방침</h1>
-<p class="meta">시행일: 2026-09-14 · 문의: dlduddn6060@gmail.com</p>
+<p class="meta">시행일: 2026-10-10 · 문의: dlduddn6060@gmail.com</p>
 
 <p>zi("앱")는 사용자의 알림을 정리해 보여주는 안드로이드 앱입니다. <strong>알림의 원문(제목·본문·발신자 등)은 기기 안에만</strong> 저장되며, 서비스 개선을 위한 <strong>익명 사용 라벨만</strong> zi 서버로 전송됩니다(설정에서 끌 수 있음). zi는 회원가입·로그인이 없습니다. 본 방침은 zi가 어떤 정보를 어떻게 다루는지 설명합니다.</p>
 
@@ -26,7 +26,7 @@
 <h3>알림 내용(원문)</h3>
 <p>알림 접근 권한(NotificationListenerService)을 통해 알림의 제목·내용·앱 이름·시각 등을 읽어 분류·요약합니다. 이 <strong>원문 데이터는 기기 내 로컬 저장소에만</strong> 저장되며, <strong>외부로 전송되지 않고 개발자도 접근할 수 없습니다.</strong></p>
 <h3>사용 정보(선택)</h3>
-<p>사용자가 켠 경우에 한해 어떤 앱을 열었는지(사용 정보 접근)를 읽어 "읽은 알림 자동 정리"에 사용합니다. 기기 내에서만 쓰이며 전송되지 않습니다.</p>
+<p>사용자가 켠 경우에 한해 어떤 앱을 언제 열었는지(사용 정보 접근)를 읽어 "읽은 알림 자동 정리"와 "다음 행동 추천"(예: 이 시간에 자주 여는 앱)에 사용합니다. 앱 사용 기록·패턴은 기기 안에서만 집계되며 전송되지 않습니다. 단, 사용자가 추천을 누르거나 숨긴 경우 그 추천 앱의 이름이 2항의 익명 라벨로 전송됩니다.</p>
 
 <h2>2. zi 서버로 전송되는 정보 — 익명 사용 라벨 (기본 켜짐, 끌 수 있음)</h2>
 <p>분류·요약 규칙을 개선하기 위해, 사용자의 반응을 <strong>익명 라벨 형태로만</strong> 전송합니다. 개인을 식별하지 않습니다.</p>
@@ -35,12 +35,13 @@
 <li>알림이 온 <strong>앱/출처</strong>(패키지명)</li>
 <li>zi가 매긴 <strong>분류 판정</strong>(예: 중요·연락·정보·소음·광고)과 판정 근거 신호(그룹 대화 여부·답장 가능 여부 등)</li>
 <li>사용자 <strong>반응</strong>(중요표시·열기·신고·무반응)</li>
+<li>zi가 보여준 <strong>행동 추천에 대한 반응</strong>(누름·숨김)과 그 <strong>추천 앱(패키지명)</strong>, 추천 근거 유형(시간대 습관·다음 앱·알림 후 행동 등)</li>
 <li>발생 <strong>시각</strong>, 앱 버전, <strong>익명 설치 식별자</strong>(무작위 값, 앱 재설치 시 초기화 — 개인 신원과 무관)</li>
 </ul>
 <h3>전송하지 않는 것</h3>
 <p>알림의 <strong>제목·본문·발신자·연락처·인증번호·금액·메시지 내용 등 원문/개인정보는 전송하지 않습니다.</strong></p>
 <h3>저장·통제</h3>
-<p>전송된 익명 라벨은 zi 운영 인프라(Firebase / Firestore, Google)에 저장되며 서비스 개선에만 사용됩니다. 이 기능은 <strong>설정 "지브라 똑똑하게 돕기"에서 언제든 끌 수 있으며</strong>, 끄면 전송이 중단됩니다.</p>
+<p>전송된 익명 라벨은 zi 운영 인프라(Firebase / Firestore, Google)에 저장되며 서비스 개선에만 사용됩니다. 이 기능은 <strong>설정 "zi 개선 돕기"에서 언제든 끌 수 있으며</strong>, 끄면 전송이 중단됩니다.</p>
 
 <h2>3. 푸시 알림(공지)</h2>
 <p>zi는 공지 수신을 위해 Firebase Cloud Messaging(Google)을 사용합니다. 기기별 메시징 토큰이 Google에 의해 처리될 수 있으며, zi는 이를 개인 신원과 연결하지 않습니다. 공지는 "토픽" 방송 방식이라 개별 사용자를 식별해 보내지 않습니다.</p>
@@ -49,9 +50,8 @@
 <ul>
 <li><strong>알림 접근</strong> — 알림을 읽어 정리·요약(핵심 기능).</li>
 <li><strong>알림 표시</strong> — 정리된 요약·공지 표시.</li>
-<li><strong>사용 정보 접근(선택)</strong> — 읽은 알림 자동 정리.</li>
+<li><strong>사용 정보 접근(선택)</strong> — 읽은 알림 자동 정리, 다음 행동 추천.</li>
 <li><strong>알람/부팅 완료</strong> — 리마인더 예약 및 재부팅 후 복원.</li>
-<li><strong>배터리 최적화 제외(선택)</strong> — 절전 중에도 알림 정리 유지.</li>
 <li><strong>인터넷</strong> — 익명 사용 라벨 전송, 푸시 수신.</li>
 </ul>
 
@@ -73,7 +73,7 @@
 <hr />
 
 <h1>zi Privacy Policy</h1>
-<p class="meta">Effective: 2026-09-14 · Contact: dlduddn6060@gmail.com</p>
+<p class="meta">Effective: 2026-10-10 · Contact: dlduddn6060@gmail.com</p>
 
 <p>zi ("the app") is an Android app that tidies and summarizes your notifications. The <strong>content of your notifications (title, body, sender, etc.) stays on your device</strong>; only <strong>anonymous usage labels</strong> are sent to zi's server to improve the service (you can turn this off in settings). zi has no sign-up or login. This policy explains what zi handles and how.</p>
 
@@ -81,7 +81,7 @@
 <h3>Notification content</h3>
 <p>Via notification access (NotificationListenerService), zi reads the title, text, app name, and time of notifications to classify and summarize them. This <strong>content is stored only in local on-device storage</strong>, is <strong>not sent anywhere, and is not accessible to the developer.</strong></p>
 <h3>Usage data (optional)</h3>
-<p>Only if you enable it, zi reads which apps you open (usage access) to power "auto-clear read notifications." Used on-device only; never transmitted.</p>
+<p>Only if you enable it, zi reads which apps you open and when (usage access) to power "auto-clear read notifications" and "next-action suggestions" (e.g., apps you often open at this time). App usage history and patterns are computed on-device only and never transmitted. However, when you tap or hide a suggestion, the suggested app's name is sent as an anonymous label (section 2).</p>
 
 <h2>2. Sent to zi's server — anonymous usage labels (on by default, can be turned off)</h2>
 <p>To improve classification and summarization, zi sends your reactions as <strong>anonymous labels only</strong>. It does not identify you.</p>
@@ -90,12 +90,13 @@
 <li>The <strong>app/source</strong> of the notification (package name)</li>
 <li>zi's <strong>classification verdict</strong> (e.g., important, contact, info, noise, ad) and the signals behind it (whether it's a group conversation, whether reply is possible, etc.)</li>
 <li>Your <strong>reaction</strong> (star, open, report, no-reaction)</li>
+<li>Your <strong>reaction to an action suggestion</strong> (tap, hide), the <strong>suggested app</strong> (package name), and the type of suggestion (time habit, next app, after-notification, etc.)</li>
 <li>The <strong>time</strong>, app version, and an <strong>anonymous install identifier</strong> (a random value, reset when the app is reinstalled — not tied to your identity)</li>
 </ul>
 <h3>What is NOT sent</h3>
 <p>The notification's <strong>title, body, sender, contacts, verification codes, amounts, message content, or any other original/personal information is not sent.</strong></p>
 <h3>Storage and control</h3>
-<p>The anonymous labels are stored on zi's operating infrastructure (Firebase / Firestore, Google) and used only to improve the service. You can <strong>turn this off anytime in settings ("Help zi get smarter")</strong>; turning it off stops transmission.</p>
+<p>The anonymous labels are stored on zi's operating infrastructure (Firebase / Firestore, Google) and used only to improve the service. You can <strong>turn this off anytime in settings ("Help improve zi")</strong>; turning it off stops transmission.</p>
 
 <h2>3. Push notifications (announcements)</h2>
 <p>zi uses Firebase Cloud Messaging (Google) to receive announcements. A per-device messaging token may be processed by Google; zi does not link it to your identity. Announcements use "topic" broadcast and do not target individual users.</p>
@@ -104,9 +105,8 @@
 <ul>
 <li><strong>Notification access</strong> — read notifications to tidy/summarize (core function).</li>
 <li><strong>Post notifications</strong> — show the tidied summary and announcements.</li>
-<li><strong>Usage access (optional)</strong> — auto-clear read notifications.</li>
+<li><strong>Usage access (optional)</strong> — auto-clear read notifications and next-action suggestions.</li>
 <li><strong>Alarms / boot completed</strong> — schedule reminders and restore after reboot.</li>
-<li><strong>Battery optimization exclusion (optional)</strong> — keep tidying alive during power saving.</li>
 <li><strong>Internet</strong> — send anonymous usage labels and push reception.</li>
 </ul>
 
