@@ -32,107 +32,152 @@
   .a-report { background: #ffe8e8; color: #b00; }
   .a-star { background: #fff4d6; color: #9a6b00; }
   .a-open { background: #e6f0ff; color: #1155cc; }
-  .a-ignore { background: #eee; color: #888; }
+  .a-ignore, .a-ignore_daily { background: #eee; color: #888; }
+  .a-suggest_open, .a-suggest_dismiss { background: #eef7ee; color: #2a7a2a; }
   .muted { color: #aaa; }
   .tblwrap { overflow-x: auto; }
   .mini { font-size: 12px; padding: 4px 9px; }
   .err { color: #b00; font-size: 13px; }
+  .more { margin: 14px 0; text-align: center; }
+  .note { color: #aaa; font-size: 12px; margin: -6px 0 12px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 640px) { .two { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
   <h1>zi 수집함</h1>
-  <p class="sub">사용자 선택(별·열기·신고·무반응) 이벤트 — 라벨만. 원문 없음.</p>
+  <p class="sub">사용자 선택(별·열기·신고·추천·무반응) 이벤트 — 라벨만. 원문 없음. 무반응은 하루 1회 (앱, 판정)별 개수로 들어옴.</p>
 
   <div class="bar">
     <input id="pw" type="password" placeholder="관리자 비밀번호" />
     <button class="primary" id="load">불러오기</button>
-    <button id="csv">CSV 내보내기</button>
+    <button id="csv">CSV 내보내기(기간 전체)</button>
     <label style="font-size:13px;color:#666;margin-left:6px;">
       <input type="checkbox" id="hideFixed" /> 처리됨 숨기기
     </label>
     <span id="msg" class="err"></span>
   </div>
 
+  <div class="chips" id="period"></div>
   <div id="summary"></div>
+  <p class="note">카드·판정별·앱별 = 기간 집계(stats, KST 날짜). 아래 목록·반응 필터 = 불러온 행 기준.</p>
   <div class="chips" id="chips"></div>
   <div class="tblwrap"><table id="tbl"><thead></thead><tbody></tbody></table></div>
+  <div class="more"><button id="more" hidden>더 보기</button></div>
 
 <script>
 (function () {
-  var ACTIONS = ['report','star','open','ignore'];
-  var LABELS = { report:'신고🪄', star:'별⭐', open:'열기', ignore:'무반응' };
-  var all = [], filter = 'all', pw = '';
+  var ACTIONS = ['report','star','open','ignore','suggest_open','suggest_dismiss'];
+  var LABELS = { report:'신고🪄', star:'별⭐', open:'열기', ignore:'무반응', ignore_daily:'무반응(일)', suggest_open:'추천 열기', suggest_dismiss:'추천 안 볼래' };
+  var PERIODS = [['today','오늘'],['7d','7일'],['30d','30일'],['all','전체']];
+  var all = [], filter = 'all', pw = '', period = '7d', cursor = null, st = null;
 
   function post(body) {
     return fetch('/api/reports', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) })
       .then(function (r) { return r.json().then(function (j) { return { ok:r.ok, j:j }; }); });
   }
   function msg(t, err) { var m=document.getElementById('msg'); m.textContent=t||''; m.className = err?'err':''; m.style.color = err?'#b00':'#2a2'; }
+  function esc(v) { return String(v==null?'':v).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+  // KST 기준 yyyy-MM-dd — 서버 stats 문서 키와 동일.
+  function kstDay(ms) { return new Date(ms + 9*3600*1000).toISOString().slice(0,10); }
+  function range() {
+    if (period === 'all') return {};
+    var now = Date.now(), back = period === 'today' ? 0 : (period === '7d' ? 6 : 29);
+    return { from: kstDay(now - back*86400000), to: kstDay(now) };
+  }
+  function withRange(o) { var r = range(); if (r.from) { o.from = r.from; o.to = r.to; } return o; }
+
+  // 이벤트 1행의 무게 — ignore_daily는 count건.
+  function w(x) { return x.action === 'ignore_daily' ? (Number(x.count) || 0) : 1; }
 
   function shown() {
     var hide = document.getElementById('hideFixed').checked;
     return all.filter(function (x) {
-      if (filter !== 'all' && x.action !== filter) return false;
+      if (filter === 'ignore') { if (x.action !== 'ignore' && x.action !== 'ignore_daily') return false; }
+      else if (filter !== 'all' && x.action !== filter) return false;
       if (hide && x.status === 'fixed') return false;
       return true;
     });
   }
 
   function fmtTs(ms) { if(!ms) return ''; var d=new Date(ms); return d.getMonth()+1+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+  function sorted(m) { return Object.keys(m||{}).map(function(k){return [k,m[k]];}).sort(function(a,b){return b[1]-a[1];}); }
 
-  function tally(list, key) {
-    var m = {}; list.forEach(function (x){ var k=(x[key]||'(없음)'); m[k]=(m[k]||0)+1; });
-    return Object.keys(m).map(function(k){return [k,m[k]];}).sort(function(a,b){return b[1]-a[1];});
+  function renderPeriod() {
+    var el = document.getElementById('period');
+    el.innerHTML = PERIODS.map(function(p){ return '<span class="chip'+(period===p[0]?' on':'')+'" data-p="'+p[0]+'">'+p[1]+'</span>'; }).join('');
+    Array.prototype.forEach.call(el.querySelectorAll('.chip'), function(c){ c.onclick=function(){ period=c.getAttribute('data-p'); renderPeriod(); if (pw) load(); }; });
+  }
+
+  function renderSummary() {
+    var s = document.getElementById('summary');
+    if (!st) { s.innerHTML = ''; return; }
+    var a = st.action || {};
+    var n = function(k){ return a[k] || 0; };
+    var cards = [
+      [n('report'),'신고🪄'], [n('star'),'별⭐'], [n('open'),'열기'],
+      [n('ignore') + n('ignore_daily'),'무반응'], [n('suggest_open') + n('suggest_dismiss'),'추천 반응'], [st.total || 0,'전체'],
+    ];
+    function grp(title, arr){ return '<div class="grp"><h3>'+title+'</h3>'+(arr.slice(0,12).map(function(r){return '<div class="row"><span>'+esc(r[0])+'</span><span>'+r[1]+'</span></div>';}).join('')||'<div class="muted">없음</div>')+'</div>'; }
+    s.innerHTML = '<div class="cards">' + cards.map(function(c){ return '<div class="card"><div class="n">'+c[0]+'</div><div class="l">'+c[1]+'</div></div>'; }).join('') + '</div>'
+      + '<div class="two">'+grp('zi판정별 (기간)',sorted(st.verdict))+grp('앱별 (기간)',sorted(st.app))+'</div>';
   }
 
   function render() {
+    renderSummary();
     var list = shown();
-    // 요약 카드 (action별)
-    var s = document.getElementById('summary');
-    var byA = {}; all.forEach(function(x){ byA[x.action]=(byA[x.action]||0)+1; });
-    var cards = '<div class="cards">' + ACTIONS.map(function(a){
-      return '<div class="card"><div class="n">'+(byA[a]||0)+'</div><div class="l">'+LABELS[a]+'</div></div>';
-    }).join('') + '<div class="card"><div class="n">'+all.length+'</div><div class="l">전체</div></div></div>';
-    // 판정별 / 앱별
-    var byV = tally(list,'ziVerdict'), byApp = tally(list,'app');
-    function grp(title, arr){ return '<div class="grp"><h3>'+title+'</h3>'+arr.slice(0,12).map(function(r){return '<div class="row"><span>'+r[0]+'</span><span>'+r[1]+'</span></div>';}).join('')+'</div>'; }
-    s.innerHTML = cards + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">'+grp('zi판정별 (필터 반영)',byV)+grp('앱별 (필터 반영)',byApp)+'</div>';
-
-    // 칩
     var chips = document.getElementById('chips');
     var opts = [['all','전체']].concat(ACTIONS.map(function(a){return [a,LABELS[a]];}));
     chips.innerHTML = opts.map(function(o){ return '<span class="chip'+(filter===o[0]?' on':'')+'" data-f="'+o[0]+'">'+o[1]+'</span>'; }).join('');
     Array.prototype.forEach.call(chips.querySelectorAll('.chip'), function(c){ c.onclick=function(){ filter=c.getAttribute('data-f'); render(); }; });
 
-    // 표
     var thead = document.querySelector('#tbl thead');
-    thead.innerHTML = '<tr><th>시각</th><th>반응</th><th>zi판정</th><th>앱</th><th>신호</th><th>상태</th><th></th></tr>';
+    thead.innerHTML = '<tr><th>시각</th><th>반응</th><th>건수</th><th>zi판정</th><th>앱</th><th>신호</th><th>상태</th><th></th></tr>';
     var tb = document.querySelector('#tbl tbody');
     tb.innerHTML = list.map(function(x){
       return '<tr>'
-        + '<td class="muted">'+fmtTs(x.createdAt)+'</td>'
-        + '<td><span class="tag a-'+x.action+'">'+(LABELS[x.action]||x.action)+'</span></td>'
-        + '<td>'+(x.ziVerdict||'')+'</td>'
-        + '<td>'+(x.app||'')+'</td>'
-        + '<td class="muted">'+(x.signals||'')+'</td>'
+        + '<td class="muted">'+(x.action==='ignore_daily' && x.day ? esc(x.day) : fmtTs(x.createdAt))+'</td>'
+        + '<td><span class="tag a-'+esc(x.action)+'">'+esc(LABELS[x.action]||x.action)+'</span></td>'
+        + '<td>'+w(x)+'</td>'
+        + '<td>'+esc(x.ziVerdict)+'</td>'
+        + '<td>'+esc(x.app)+'</td>'
+        + '<td class="muted">'+esc(x.signals)+'</td>'
         + '<td>'+(x.status==='fixed'?'<span class="muted">처리됨</span>':'new')+'</td>'
         + '<td style="white-space:nowrap;">'
-          + '<button class="mini" data-fix="'+x.id+'">처리</button> '
-          + '<button class="mini" data-del="'+x.id+'">삭제</button>'
+          + '<button class="mini" data-fix="'+esc(x.id)+'">처리</button> '
+          + '<button class="mini" data-del="'+esc(x.id)+'">삭제</button>'
         + '</td></tr>';
-    }).join('') || '<tr><td colspan="7" class="muted">데이터 없음</td></tr>';
+    }).join('') || '<tr><td colspan="8" class="muted">데이터 없음</td></tr>';
+    document.getElementById('more').hidden = !cursor;
 
     Array.prototype.forEach.call(tb.querySelectorAll('[data-fix]'), function(b){ b.onclick=function(){ act('fix', b.getAttribute('data-fix')); }; });
     Array.prototype.forEach.call(tb.querySelectorAll('[data-del]'), function(b){ b.onclick=function(){ act('delete', b.getAttribute('data-del')); }; });
+  }
+
+  function page(cur, limit) {
+    return post(withRange({ password: pw, action: 'list', cursor: cur || undefined, limit: limit }));
   }
 
   function load() {
     pw = document.getElementById('pw').value;
     if (!pw) { msg('비밀번호를 넣어줘', true); return; }
     msg('불러오는 중...');
-    post({ password: pw, action: 'list' }).then(function(r){
+    Promise.all([post(withRange({ password: pw, action: 'stats' })), page(null, 100)]).then(function(rs){
+      var bad = rs.filter(function(r){ return !r.ok; })[0];
+      if (bad) { msg(bad.j.error || '실패', true); return; }
+      st = rs[0].j; all = rs[1].j.items || []; cursor = rs[1].j.nextCursor || null;
+      msg('집계 ' + (st.days||0) + '일 · 목록 ' + all.length + '건' + (cursor ? '(더 있음)' : ''));
+      render();
+    }).catch(function(e){ msg(e.message, true); });
+  }
+
+  function more() {
+    if (!cursor) return;
+    page(cursor, 100).then(function(r){
       if (!r.ok) { msg(r.j.error || '실패', true); return; }
-      all = r.j.items || []; msg(all.length + '건 불러옴');
+      all = all.concat(r.j.items || []); cursor = r.j.nextCursor || null;
+      msg('목록 ' + all.length + '건' + (cursor ? '(더 있음)' : ''));
       render();
     }).catch(function(e){ msg(e.message, true); });
   }
@@ -146,17 +191,35 @@
     });
   }
 
+  // CSV = 선택 기간 전체 — 페이지(500건씩)를 끝까지 순회.
   function csv() {
-    var list = shown();
-    var head = ['createdAt','action','ziVerdict','app','signals','installId','appVersion','status'];
-    var rows = [head.join(',')].concat(list.map(function(x){
-      return head.map(function(k){ var v=(k==='createdAt'?fmtTs(x[k]):(x[k]==null?'':x[k])); return '"'+String(v).replace(/"/g,'""')+'"'; }).join(',');
-    }));
-    var blob = new Blob(['﻿'+rows.join('\n')], { type:'text/csv;charset=utf-8;' });
-    var a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='zi_events.csv'; a.click();
+    if (!pw) { msg('먼저 불러오기', true); return; }
+    var rowsAll = [];
+    function step(cur) {
+      return page(cur, 500).then(function(r){
+        if (!r.ok) throw new Error(r.j.error || '실패');
+        rowsAll = rowsAll.concat(r.j.items || []);
+        msg('CSV 모으는 중... ' + rowsAll.length + '건');
+        return r.j.nextCursor ? step(r.j.nextCursor) : rowsAll;
+      });
+    }
+    step(null).then(function(list){
+      var head = ['createdAt','action','count','day','ziVerdict','app','signals','installId','appVersion','status'];
+      var rows = [head.join(',')].concat(list.map(function(x){
+        return head.map(function(k){
+          var v = k==='createdAt' ? fmtTs(x[k]) : (k==='count' ? w(x) : (x[k]==null?'':x[k]));
+          return '"'+String(v).replace(/"/g,'""')+'"';
+        }).join(',');
+      }));
+      var blob = new Blob(['﻿'+rows.join('\n')], { type:'text/csv;charset=utf-8;' });
+      var a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='zi_events_'+period+'.csv'; a.click();
+      msg('CSV ' + list.length + '건');
+    }).catch(function(e){ msg(e.message, true); });
   }
 
+  renderPeriod();
   document.getElementById('load').onclick = load;
+  document.getElementById('more').onclick = more;
   document.getElementById('csv').onclick = csv;
   document.getElementById('hideFixed').onchange = render;
   document.getElementById('pw').addEventListener('keydown', function(e){ if(e.key==='Enter') load(); });

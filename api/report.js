@@ -1,5 +1,7 @@
 // zi 이벤트 수집 수신 — Vercel 서버리스 함수
-// 앱에서 사용자 선택(별/열기/신고/무반응)마다 POST → Firestore "events".
+// 앱에서 사용자 선택(별/열기/신고/추천)마다 POST → Firestore "events".
+// 무반응은 앱이 하루 1회 (앱, 판정)별 개수로 묶어 보냄(action=ignore_daily, count, day).
+// 저장과 동시에 stats/{yyyy-MM-dd}(KST) 집계 문서를 FieldValue.increment로 갱신 — 대시보드는 stats만 읽음.
 // ⚠️ 라벨만 저장. 알림 원문(제목·본문·발신자·인증번호·금액·메모)은 방어적 allowlist로 절대 저장 안 함.
 //
 // 환경변수(Vercel → Settings → Environment Variables):
@@ -12,8 +14,10 @@ if (!admin.apps.length) {
     credential: admin.credential.cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)),
   });
 }
+const stats = require('./_stats');
 
-const ALLOWED_ACTIONS = ['star', 'open', 'report', 'ignore', 'suggest_open', 'suggest_dismiss'];
+// 'ignore'(건별)는 구버전 앱 호환용으로 계속 받음.
+const ALLOWED_ACTIONS = ['star', 'open', 'report', 'ignore', 'ignore_daily', 'suggest_open', 'suggest_dismiss'];
 
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') {
@@ -31,7 +35,17 @@ module.exports = async (req, res) => {
 
   const action = (d.action || '').toString();
   if (!ALLOWED_ACTIONS.includes(action)) {
-    return res.status(400).json({ error: 'action 필요(star/open/report/ignore/suggest_open/suggest_dismiss)' });
+    return res.status(400).json({ error: 'action 필요(' + ALLOWED_ACTIONS.join('/') + ')' });
+  }
+  let count = null;
+  let day = null;
+  if (action === 'ignore_daily') {
+    count = Number(d.count);
+    if (!Number.isInteger(count) || count < 1 || count > 10000) {
+      return res.status(400).json({ error: 'ignore_daily: count는 1~10000 정수' });
+    }
+    day = (d.day || '').toString();
+    if (!stats.isValidDay(day)) return res.status(400).json({ error: 'ignore_daily: day는 yyyy-MM-dd' });
   }
 
   // 라벨 allowlist — 이 필드만 저장. 원문류(title/body/summary/sender/memo)는 와도 버림.
@@ -43,12 +57,19 @@ module.exports = async (req, res) => {
     installId: (d.installId || '').toString().slice(0, 64), // 익명 설치ID(재설치 리셋)
     appVersion: (d.appVersion || '').toString().slice(0, 60),
     clientTs: Number(d.ts) || null,
+    ...(action === 'ignore_daily' ? { count, day } : {}),
     status: 'new',
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
   };
 
   try {
-    const ref = await admin.firestore().collection('events').add(doc);
+    const db = admin.firestore();
+    const ref = db.collection('events').doc();
+    const statsRef = db.collection('stats').doc(stats.statsDay(doc, Date.now()));
+    const batch = db.batch();
+    batch.set(ref, doc);
+    batch.set(statsRef, stats.incrementDoc(admin.firestore.FieldValue, doc, stats.weight(doc)), { merge: true });
+    await batch.commit();
     return res.status(200).json({ ok: true, id: ref.id });
   } catch (e) {
     return res.status(500).json({ error: e.message });
